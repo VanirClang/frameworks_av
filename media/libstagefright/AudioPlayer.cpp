@@ -436,7 +436,7 @@ size_t AudioPlayer::AudioSinkCallback(
         MediaPlayerBase::AudioSink::cb_event_t event) {
     AudioPlayer *me = (AudioPlayer *)cookie;
 
-#ifdef QCOM_HARDWARE
+#ifdef QCOM_DIRECTTRACK
     if (buffer == NULL) {
         //Not applicable for AudioPlayer
         ALOGE("This indicates the event underrun case for LPA/Tunnel");
@@ -556,6 +556,12 @@ size_t AudioPlayer::fillBuffer(void *data, size_t size) {
                 mIsFirstBuffer = false;
             } else {
                 err = mSource->read(&mInputBuffer, &options);
+#ifdef QCOM_HARDWARE
+                if (err == OK && mInputBuffer == NULL && mSourcePaused) {
+                    ALOGV("mSourcePaused, return 0 from fillBuffer");
+                    return 0;
+                }
+#endif
             }
 
             CHECK((err == OK && mInputBuffer != NULL)
